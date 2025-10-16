@@ -2,22 +2,43 @@
 
 import { ChatForm } from "@/components/ChatForm";
 import { ChatMessage } from "@/components/ChatMessage";
-import Image from "next/image";
-import { useState } from "react";
+import { socket } from "@/lib/socketClient";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [room, setRoom] = useState("");
   const [joined, setJoined] = useState(false);
-  const [messages, setMesasges] = useState<
+  const [messages, setMessages] = useState<
     { sender: string; message: string }[]
   >([]);
+
+  useEffect(() => {
+    socket.on("message", (data) => {
+      setMessages((prev) => [...prev, data]);
+    })
+
+    socket.on("user_joined", (message) => {
+      setMessages((prev) => [...prev, { sender: "system", message }]);
+    })
+
+    return () => {
+      socket.off("user_joined");
+      socket.off("message");
+    }
+  }, []);
+
   const [userName, setUserName] = useState("");
   const handleJoinRoom = () => {
-    setJoined(true);
+    if (room && userName) {
+      socket.emit("join-room", {room, username: userName});
+      setJoined(true);
+    }
   }
 
   const handleSendMessage = (message: string) => {
-    console.log(message);
+    const data = { room, message, sender: userName };
+    setMessages((prev) => [...prev, {sender: userName, message}]);
+    socket.emit("message", data);
   };
 
   return (
@@ -48,7 +69,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="w-full max-w-3xl mx-auto">
-          <h1 className="mb-4 text-2xl font-bold">Room: 1</h1>
+          <h1 className="mb-4 text-2xl font-bold">Room: {room}</h1>
           <div className="h-[500px] overflow-y-auto p-4 mb-4 bg-gray-200 rounded-lg">
             {messages.map((msg, index) => (
               <ChatMessage

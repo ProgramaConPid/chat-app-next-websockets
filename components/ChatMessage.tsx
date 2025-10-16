@@ -16,12 +16,12 @@ export const ChatMessage = ({sender, message, isOwnMessage}: ChatMessageProps) =
     >
       <div className={`max-w-xs px-4 py-2 rounded-lg ${
         isSystemMessage 
-          ? "bg-grey-800 text-xs text-center text-white"
+          ? "bg-gray-800 text-xs text-center text-white"
           : isOwnMessage
           ? "bg-blue-500 text-white"
           : "bg-white text-black"
       }`}>
-        {isSystemMessage ?? <p className="text-sm font-bold">{sender}</p>}
+        {!isSystemMessage && <p className="text-sm font-bold">{sender}</p>}
         <p className="text-sm">{message}</p>
       </div>
     </div>
