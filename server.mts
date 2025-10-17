@@ -1,11 +1,16 @@
 import { createServer } from "node:http";
-import next from "next";
+import * as Next from "next";
 import { Server } from "socket.io";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOSTNAME || "localhost";
+const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port = parseInt(process.env.PORT || "3000", 10);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const next = (Next as any).default ?? Next;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
@@ -24,7 +29,7 @@ app.prepare().then(() => {
 
     socket.on("message", ({room, message, sender}) => {
       console.log(`Message from ${sender} in room ${room}: ${message}`);
-      socket.to(room).emit("message", { sender: "system", message });
+      socket.to(room).emit("message", { sender, message });
     })
 
     socket.on("disconnect", () => {
