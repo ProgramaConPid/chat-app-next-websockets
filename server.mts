@@ -16,6 +16,8 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
 
+  const userRooms = new Map<string, { username: string; room: string }>();
+
   const httpServer = createServer(handle);
   const io = new Server(httpServer);
   io.on("connection", (socket) => {
@@ -23,6 +25,7 @@ app.prepare().then(() => {
 
     socket.on("join-room", ({room, username}) => {
       socket.join(room);
+      userRooms.set(socket.id, { username, room });
       console.log(`User ${username} joined room ${room}`);
       socket.to(room).emit("user_joined", `${username} joined room`);
     })
@@ -33,7 +36,17 @@ app.prepare().then(() => {
     })
 
     socket.on("disconnect", () => {
+      const userData = userRooms.get(socket.id);
       console.log(`User disconnected: ${socket.id}`)
+
+      if (userData) {
+        const { username, room } = userData;
+        console.log(`User ${username} disconnected from room ${room}`);
+        socket.to(room).emit("user_left", `${username} left the room`);
+        userRooms.delete(socket.id);
+      } else {
+        console.log(`User disconnected: ${socket.id}`);
+      }
     })
   })
 

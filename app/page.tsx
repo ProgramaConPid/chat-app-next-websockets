@@ -21,6 +21,10 @@ export default function Home() {
       setMessages((prev) => [...prev, { sender: "system", message }]);
     })
 
+    socket.on("user_left", (message) => {
+      setMessages((prev) => [...prev, { sender: "system", message }]);
+    });
+
     return () => {
       socket.off("user_joined");
       socket.off("message");
